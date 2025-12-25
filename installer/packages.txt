@@ -1,0 +1,11 @@
+psutil
+requests
+icecream
+screeninfo
+urllib3
+virtualenv
+beautifulsoup4
+selenium
+obs-websocket-py
+tk
+pygetwindow

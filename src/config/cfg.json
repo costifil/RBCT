@@ -1,0 +1,20 @@
+[
+    {
+        "application": "translate_subtitle_OBS",
+        "url": "https://bisericabaptistaromanatoronto.breezetranslate.com/client/ro",
+        "language": "ro",
+        "max_subtitle_lines": 2 
+    },
+    {
+        "application": "video_projection",
+        "displays": [
+            "DISPLAY1",
+            "DISPLAY2",
+            "DISPLAY3"
+        ],
+        "app_list": [
+            "VLC media player",
+            "Windows Media Player"
+        ]
+    }
+]
