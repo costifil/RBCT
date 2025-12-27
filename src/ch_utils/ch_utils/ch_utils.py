@@ -7,7 +7,7 @@ import json
 CFG_FILE = "../../config/cfg.json"
 
 def get_config_info():
-    """read configuration info from cfg.json file"""
+    '''read configuration info from cfg.json file'''
     local_path = os.path.dirname(__file__)
     config_file = os.path.join(local_path, CFG_FILE)
     data = None

@@ -1,9 +1,11 @@
 [
     {
         "application": "translate_subtitle_OBS",
-        "url": "https://bisericabaptistaromanatoronto.breezetranslate.com/client/",
-        "language": "ro",
-        "max_subtitle_lines": 2,
+		"BreezeTranslate": {
+			"url": "https://bisericabaptistaromanatoronto.breezetranslate.com/client/",
+			"language": "ro",
+			"max_subtitle_lines": 2
+		},
 		"OBS": {
 			"host": "localhost",
 			"port": 4455,
