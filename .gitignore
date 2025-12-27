@@ -1,0 +1,7 @@
+# Ignore all egg-info directories
+*.egg-info/
+
+# Ignore all Python bytecode chaches
+__pycache__/
+
+.gitignore
