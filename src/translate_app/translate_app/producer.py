@@ -67,7 +67,8 @@ class Producer(Thread):
                         if text in used_text:
                             logging.debug("Text already in the used list: %s", text)
                             continue
-                        self.write_q.put(text)
+
+                        self.write_q.add(text)
                         used_text.append(text)
                         logging.debug("Text added to the queue: %s", text)
 

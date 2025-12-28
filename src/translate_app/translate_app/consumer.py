@@ -18,11 +18,12 @@ class Consumer(Thread):
         self.host = kwargs.get("OBS", {}).get("host")
         self.port = kwargs.get("OBS", {}).get("port")
         self.password = kwargs.get("OBS", {}).get("password")
+        self.gdi_text = kwargs.get("OBS", {}).get("gdi_text")
 
         self.read_q = read_queue
         self.stop_process = Event()
         self.ws_obs = None
-        #self.connect_obs()
+        self.connect_obs()
 
     def connect_obs(self):
         '''connect to OBS'''
@@ -32,6 +33,7 @@ class Consumer(Thread):
         else:
             logging.error("Fail to get OBS socket")
             raise Exception("Fail to get OBS socket")
+        logging.info("Connected to OBS!")
 
     def disconnect_obs(self):
         '''disconnect from OBS'''
@@ -45,27 +47,39 @@ class Consumer(Thread):
 
     def run(self):
         logging.info("Consumer started ...")
+        print("Consumer started")
 
-        ts = 0
+        ts = 1
         while not self.stop_process.is_set():
             try:
-                text = self.read_q.get(timeout=1)
-                logging.debug("Text read from the queue: %s", text)
-                self.read_q.task_done()
-                len_txt = len(text)
-                if len_txt > 100:
-                    ts = 3
-                elif len_txt > 50:
-                    ts = 2
-                else:
-                    ts = 1
-                print(text)
+                text = self.read_q.pop()
+                if text:
+                    len_txt = len(text)
+                    if len_txt > 140:
+                        ts = 5
+                    elif len_txt > 100:
+                        ts = 4
+                    elif len_txt > 40:
+                        ts = 3
+                    elif len_txt > 20:
+                        ts = 2
+                    else:
+                        ts = 1
 
-                # self.ws_obs.call(requests.SetInputSettings(inputName="MyTextSource",
-                                                           # inputSettings={"text": txt},
-                                                           # overlay=True))
+                    logging.debug("Text read from the queue: %s", text)
+                    print(text)
+
+                    self.ws_obs.call(requests.SetInputSettings(inputName=self.gdi_text,
+                                                               inputSettings={"text": text},
+                                                               overlay=True))
+                else:
+                    ts = 0.5
 
             except queue.Empty:
+                logging.error("queue.Empty")
+                continue
+            except IndexError as ex:
+                logging.error("IndexError: %s", ex)
                 continue
 
             time.sleep(ts)

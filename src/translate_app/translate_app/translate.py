@@ -2,17 +2,17 @@
 translate module
 '''
 import time
-import queue
-from ch_logger.logger_config import setup_logger  # pylint: disable=import-error
-from translate_app.producer import Producer           # pylint: disable=import-error
-from translate_app.consumer import Consumer           # pylint: disable=import-error
-from ch_utils import ch_utils as util	# pylint: disable=import-error
+from ch_logger.logger_config import setup_logger    # pylint: disable=import-error
+from translate_app.producer import Producer         # pylint: disable=import-error
+from translate_app.consumer import Consumer         # pylint: disable=import-error
+from translate_app.string_queue import StringQueue  # pylint: disable=import-error
+from ch_utils import ch_utils as util               # pylint: disable=import-error
 
 def main():
     '''main function'''
     setup_logger() # logging initialized ONCE
 
-    que = queue.Queue()
+    strque = StringQueue()
 
     data = util.get_config_info()
     for item in data:
@@ -20,8 +20,8 @@ def main():
             data = item
             break
 
-    producer = Producer(que, **data)
-    consumer = Consumer(que, **data)
+    producer = Producer(strque, **data)
+    consumer = Consumer(strque, **data)
     producer.start()
     consumer.start()
 
