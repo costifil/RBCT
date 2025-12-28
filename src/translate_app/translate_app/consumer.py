@@ -6,7 +6,20 @@ from threading import Thread, Event
 import time
 import logging
 import queue
+from enum import Enum
 from obswebsocket import obsws, requests
+
+class LenText(Enum):
+    LESS_1 = (20, 1)    # 20 -> 1
+    LESS_2 = (40, 2)    # 40 -> 2
+    LESS_3 = (90, 3)    # 90 -> 3
+    LESS_4 = (130, 4)   # 130 -> 4
+    LESS_5 = (170, 5)   # 170 -> 5
+    LESS_6 = (999, 6)   # any -> 6
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
 class Consumer(Thread):
     '''
@@ -49,31 +62,33 @@ class Consumer(Thread):
         logging.info("Consumer started ...")
         print("Consumer started")
 
-        ts = 1
+        t_on_s = 1
         while not self.stop_process.is_set():
             try:
                 text = self.read_q.pop()
                 if text:
-                    len_txt = len(text)
-                    if len_txt > 140:
-                        ts = 5
-                    elif len_txt > 100:
-                        ts = 4
-                    elif len_txt > 40:
-                        ts = 3
-                    elif len_txt > 20:
-                        ts = 2
+                    len_text = len(text)
+                    if len_text <= LenText.LESS_1.x:
+                        t_on_s = LenText.LESS_1.y
+                    elif len_text <= LenText.LESS_2.x:
+                        t_on_s = LenText.LESS_2.y
+                    elif len_text <= LenText.LESS_3.x:
+                        t_on_s = LenText.LESS_3.y
+                    elif len_text <= LenText.LESS_4.x:
+                        t_on_s = LenText.LESS_4.y
+                    elif len_text <= LenText.LESS_5.x:
+                        t_on_s = LenText.LESS_5.y
                     else:
-                        ts = 1
+                        t_on_s = LenText.LESS_6.y
 
                     logging.debug("Text read from the queue: %s", text)
-                    print(text)
+                    #print(text)
 
                     self.ws_obs.call(requests.SetInputSettings(inputName=self.gdi_text,
                                                                inputSettings={"text": text},
                                                                overlay=True))
                 else:
-                    ts = 0.5
+                    t_on_s = 0.3
 
             except queue.Empty:
                 logging.error("queue.Empty")
@@ -82,4 +97,4 @@ class Consumer(Thread):
                 logging.error("IndexError: %s", ex)
                 continue
 
-            time.sleep(ts)
+            time.sleep(t_on_s)
