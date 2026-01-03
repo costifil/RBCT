@@ -11,6 +11,13 @@
             "port": 4455,
             "password": "",
             "gdi_text": "Subtitle"
+        },
+        "languages": {
+            "English": "en",
+            "French": "fr",
+            "Italian": "it",
+            "Romanian": "ro",
+            "Spanich": "es"
         }
     },
     {

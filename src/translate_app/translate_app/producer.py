@@ -3,8 +3,8 @@ producer module
 Read text from breezetranslate.com and push it into a queue
 '''
 from threading import Thread, Event
-import logging
 import time
+import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -17,7 +17,7 @@ class Producer(Thread):
     '''
 
     def __init__(self, write_queue, **kwargs):
-        super().__init__()
+        super().__init__(name="Breeze_Thrd")
 
         self.url = kwargs.get("BreezeTranslate", {}).get("url")
         if not self.url:
@@ -33,20 +33,29 @@ class Producer(Thread):
         self.write_q = write_queue
 
         self.stop_process = Event()
-
-        self.driver = webdriver.Chrome()
-        self.driver.get(self.url)
+        self.driver = None
 
     def stop(self):
         '''stop the thread'''
         self.stop_process.set()
+        time.sleep(0.2)
         self.driver.quit()
+        logging.info("%s stopped!", self.name)
+
+    def stop_if_req(self, driver):
+        '''stop the wait.until method from selenium'''
+        if self.stop_process.is_set():
+            raise TimeoutException("Stop requested")
+        return False
 
     def run(self):
         logging.info("Producer started ...")
+        self.driver = webdriver.Chrome()
+        self.driver.get(self.url)
 
         while not self.stop_process.is_set():
             logging.info("Wait for driver...")
+
             wait = WebDriverWait(self.driver, 30)
 
             used_text: list[str] = []
@@ -55,12 +64,10 @@ class Producer(Thread):
                     web_text: list[str] = []
                     used_text = used_text[-20:]
 
-                    elements = wait.until(EC.presence_of_all_elements_located(
-                        (By.CSS_SELECTOR, f"p.font-bold[lang='{self.language}']")))
+                    elements = wait.until(lambda d: self.stop_if_req(d) or EC.presence_of_all_elements_located(
+                        (By.CSS_SELECTOR, f"p.font-bold[lang='{self.language}']"))(d))
 
                     for elm in elements[-10:]: # get the last 10 elements
-                        #if elm.text in web_text:
-                        #    continue
                         web_text.append(elm.text)
 
                     for text in web_text:
@@ -73,11 +80,11 @@ class Producer(Thread):
                         logging.debug("Text added to the queue: %s", text)
 
                 except TimeoutException:
-                    print("Timed out")
-                    logging.error("Timed out")
+                    logging.warning("Timed out")
 
                 except Exception as ex:
-                    logging.error("General exception:\n%s", ex)
+                    self.stop_process.set()
+                    logging.error("General exception: %s\n%s", self.stop_process.is_set(), ex)
 
                 if self.stop_process.is_set():
                     break

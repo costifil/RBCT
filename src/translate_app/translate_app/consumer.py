@@ -10,6 +10,10 @@ from enum import Enum
 from obswebsocket import obsws, requests
 
 class LenText(Enum):
+    '''
+    Enum with the length of a text as first value and
+    the seconds to stay on the screen in OBS as the second value
+    '''
     LESS_1 = (20, 1)    # 20 -> 1
     LESS_2 = (40, 2)    # 40 -> 2
     LESS_3 = (90, 3)    # 90 -> 3
@@ -26,7 +30,7 @@ class Consumer(Thread):
     Consumer class: read text from queue and send it to OBS
     '''
     def __init__(self, read_queue, **kwargs):
-        super().__init__()
+        super().__init__(name="OBS_Thrd")
 
         self.host = kwargs.get("OBS", {}).get("host")
         self.port = kwargs.get("OBS", {}).get("port")
@@ -36,7 +40,6 @@ class Consumer(Thread):
         self.read_q = read_queue
         self.stop_process = Event()
         self.ws_obs = None
-        self.connect_obs()
 
     def connect_obs(self):
         '''connect to OBS'''
@@ -55,12 +58,18 @@ class Consumer(Thread):
 
     def stop(self):
         '''stop the thread'''
+        if self.ws_obs:
+            # sending empty string to GDI text in OBS
+            self.ws_obs.call(requests.SetInputSettings(inputName=self.gdi_text,
+                                                       inputSettings={"text": ""},
+                                                       overlay=True))
         self.stop_process.set()
         self.disconnect_obs()
+        logging.info("%s stopped!", self.name)
 
     def run(self):
         logging.info("Consumer started ...")
-        print("Consumer started")
+        self.connect_obs()
 
         t_on_s = 1
         while not self.stop_process.is_set():
