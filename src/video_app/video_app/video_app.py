@@ -47,14 +47,18 @@ class VideoDialog:
                 break
 
         self.displays = data.get("displays")
+        start_display = data.get("start_disaply")
+        stop_display = data.get("stop_display")
 
         col += 1
         self.combo_start = ttk.Combobox(self.gui_frame, values=self.displays)
-        self.combo_start.current(0)
+        #self.combo_start.current(0)
+        self.combo_start.set(start_display)
         self.combo_start.grid(column=col, row=0, padx=10)
 
         self.combo_stop = ttk.Combobox(self.gui_frame, values=self.displays)
-        self.combo_stop.current(1)
+        #self.combo_stop.current(1)
+        self.combo_stop.set(stop_display)
         self.combo_stop.grid(column=col, row=1, padx=10)
 
         col += 1
@@ -87,7 +91,11 @@ class VideoDialog:
             self.start_button.config(state=tk.NORMAL)
             self.stop_button.config(state=tk.NORMAL)
 
+def main():
+    '''main function - entry point'''
+    root = tk.Tk()
+    VideoDialog(root)
+    root.mainloop()
 
-root = tk.Tk()
-ui = VideoDialog(root)
-root.mainloop()
+if __name__ == "__main__":
+    main()

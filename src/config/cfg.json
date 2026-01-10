@@ -9,15 +9,13 @@
         "OBS": {
             "host": "localhost",
             "port": 4455,
-            "password": "",
+            "password": "vnUq8KmytiCg42q1",
             "gdi_text": "Subtitle"
         },
         "languages": {
             "English": "en",
             "French": "fr",
-            "Italian": "it",
-            "Romanian": "ro",
-            "Spanich": "es"
+            "Romanian": "ro"
         }
     },
     {
@@ -27,9 +25,14 @@
             "DISPLAY2",
             "DISPLAY3"
         ],
+        "start_disaply": "DISPLAY2",
+        "stop_display": "DISPLAY1",
         "app_list": [
             "VLC media player",
-            "Windows Media Player"
+            "Windows Media Player",
+            "Media Player",
+            "Breeze Translate",
+            "Clock"
         ]
     }
 ]

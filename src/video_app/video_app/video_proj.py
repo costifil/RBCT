@@ -17,14 +17,11 @@ class VideoProjection:
         '''optimize to run window on specified monitor'''
         print("screen_optimizer: display=", display, "fullscreen =", fullscreen)
         self.__monitor = get_monitor_info(display)
-        #print("screen_optimizer: self.__monitor=", self.__monitor)
 
         win_list = []
         for item in self.applications:
-            #win_list = get_win_by_title(self.applications[0])
             win_list.extend(get_win_by_title(item))
 
-        #print("win_list =", win_list)
         if win_list:
         #    reshape_window(fullscreen, self.__monitor, win_list[0])
             for item in win_list:
@@ -70,12 +67,9 @@ def calculate_win_size(matrix: int, monitor: dict):
 
 def reshape_window(fullscreen, monitor, win):
     '''reshape the window'''
-
     location_x = monitor.x
     location_y = monitor.y
 
-    #win.restore()
-    #print(location_x, location_y)
     if fullscreen:
         calculate_win_size(1, monitor)
         win.moveTo(int(location_x), int(location_y))
