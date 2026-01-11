@@ -6,11 +6,12 @@ import tkinter as tk
 from tkinter import ttk
 import time
 import logging
-from ch_logger.logger_config import setup_logger    # pylint: disable=import-error
-from translate_app.producer import Producer         # pylint: disable=import-error
-from translate_app.consumer import Consumer         # pylint: disable=import-error
-from translate_app.string_queue import StringQueue  # pylint: disable=import-error
-from ch_utils import ch_utils as util               # pylint: disable=import-error
+from ch_logger.logger_config import setup_logger        # pylint: disable=import-error
+from translate_app.producer_text import ProducerText    # pylint: disable=import-error
+from translate_app.producer import Producer             # pylint: disable=import-error
+from translate_app.consumer import Consumer             # pylint: disable=import-error
+from translate_app.string_queue import StringQueue      # pylint: disable=import-error
+from ch_utils import ch_utils as util                   # pylint: disable=import-error
 
 
 class Translate:
@@ -25,8 +26,12 @@ class Translate:
 
         if self.breeze:
             self.producer = Producer(self.strque, **self.kwargs)
-        if self.obs:
-            self.consumer = Consumer(self.strque, **self.kwargs)
+        else:
+            # start producer text as Breeze was disabled
+            self.producer = ProducerText(self.strque, **self.kwargs)
+
+        self.kwargs['obs_enable'] = self.obs
+        self.consumer = Consumer(self.strque, **self.kwargs)
 
     def start(self):
         '''initiate starting the session'''
@@ -90,7 +95,7 @@ class TranslateDialog:
 
         col += 1
         self.check_obs = tk.BooleanVar(value=True)
-        self.obs_ck = tk.Checkbutton(self.gui_frame, text="OBS Connection", variable=self.check_obs)
+        self.obs_ck = tk.Checkbutton(self.gui_frame, text="OBS Connection", variable=self.check_obs, command=self.on_obs_check)
         self.obs_ck.grid(column=col, row=row, padx=20, sticky="w")
 
         col = 0
@@ -155,6 +160,11 @@ class TranslateDialog:
         self.stop_button.config(state=tk.DISABLED)
         if self.translate:
             self.translate.stop()
+
+    def on_obs_check(self):
+        val = self.check_obs.get()
+        if self.translate and self.translate.consumer:
+            self.translate.consumer.enable_subtitle(val)
 
     def on_close(self):
         '''on close event in dialog'''
