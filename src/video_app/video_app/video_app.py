@@ -3,7 +3,7 @@ video_app module
 creates a dialog from where can be selected the display where video will play in full screen
 and the display where the video will resume after stopping the video
 '''
-
+import os
 import tkinter as tk
 from tkinter import ttk
 from ch_utils import ch_utils as ut             # pylint: disable=import-error
@@ -94,6 +94,8 @@ class VideoDialog:
 def main():
     '''main function - entry point'''
     root = tk.Tk()
+    if os.path.exists("VP.ico"):
+        root.iconbitmap("VP.ico")
     VideoDialog(root)
     root.mainloop()
 

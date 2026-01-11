@@ -9,4 +9,5 @@ selenium
 obs-websocket-py
 tk
 pygetwindow
+pillow
 pylint

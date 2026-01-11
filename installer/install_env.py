@@ -19,23 +19,20 @@ THISDIR = os.path.dirname(os.path.realpath(__file__))
 THIS_WS = os.path.abspath(os.path.join(THISDIR, ".."))
 THIS_PACKAGES = "packages.txt"
 
-try:
-    import virtualenv
-except ModuleNotFoundError:
-    pip_install('virtualenv')
-    import virtualenv
-
 
 def create_venv(venv_dir):
     virtualenv.cli_run([venv_dir])
 
-def get_activate_this_path(venv_dir):
+def get_bin_folder(venv_dir):
     scripts_dir = "bin" # for linux
-    #if platform.system().lower() == "windows":
     if IS_WINDOWS:
         scripts_dir = "Scripts"
 
-    return os.path.join(venv_dir, scripts_dir, "activate_this.py")
+    return os.path.join(venv_dir, scripts_dir)
+
+def get_activate_this_path(venv_dir):
+    scripts_dir = get_bin_folder(venv_dir)
+    return os.path.join(scripts_dir, "activate_this.py")
 
 def pip_install(arg, pip_config=None, get_output=False, cwd=None):
     cmd = PYTHON_BIN + " -m pip install " + arg
@@ -127,6 +124,13 @@ def install_workspace(workspace):
         install_local_packages(install_dir, item)
 
 
+try:
+    import virtualenv
+except ModuleNotFoundError:
+    pip_install('virtualenv')
+    import virtualenv
+
+
 def main():
     argp = argparse.ArgumentParser(description='Creates/uses a virtualenv and installs dev/rel packages')
     argp.add_argument('--venv', help='Path to virtualenv to install against, will create if nonexistent', default=os.environ.get('VIRTUAL_ENV'))
@@ -144,7 +148,13 @@ def main():
 
     print("args.workspace =", args.workspace)
     install_workspace(args.workspace)
-    
+    bin_dir = get_bin_folder(args.venv)
+    try:
+        icon_file = os.path.join(bin_dir, "icon.exe")
+        subprocess.run([icon_file], cwd=bin_dir)
+    except Exception as ex:
+        print("Fail to generate icons:", ex)
+
     print("\nInstallation completed successfully")
     print("Activate the environment using the command:")
     bin_dir = "Scripts" if IS_WINDOWS else "bin"

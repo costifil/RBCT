@@ -1,6 +1,7 @@
 '''
 translate module
 '''
+import os
 import threading
 import tkinter as tk
 from tkinter import ttk
@@ -162,6 +163,7 @@ class TranslateDialog:
             self.translate.stop()
 
     def on_obs_check(self):
+        '''enable/disable obs check'''
         val = self.check_obs.get()
         if self.translate and self.translate.consumer:
             self.translate.consumer.enable_subtitle(val)
@@ -182,6 +184,8 @@ def main():
                  console_hnd=logging.ERROR) # logging initialized ONCE
 
     root = tk.Tk()
+    if os.path.exists("CC.ico"):
+        root.iconbitmap("CC.ico")
     TranslateDialog(root)
     root.mainloop()
 
