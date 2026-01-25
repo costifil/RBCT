@@ -33,7 +33,10 @@ class Consumer(Thread):
                             "port": kwargs.get("OBS", {}).get("port"),
                             "password": kwargs.get("OBS", {}).get("password")}
 
-        self.gdi_text = kwargs.get("OBS", {}).get("gdi_text")
+        self.subtitle_gdi_text = kwargs.get("OBS", {}).get("subtitle_gdi_text")
+        self.disclaimer_gdi_text = kwargs.get("OBS", {}).get("disclaimer_gdi_text")
+        self.disclaimer_text = kwargs.get("OBS", {}).get("disclaimer_text")
+        self.disclamer_enable = False
 
         self.read_q = read_queue
         self.stop_process = Event()
@@ -75,11 +78,23 @@ class Consumer(Thread):
     def send_text(self, text: str):
         '''sending text to OBS'''
         if self.enable_text:
-            self.ws_obs.call(requests.SetInputSettings(inputName=self.gdi_text,
+            if not self.disclamer_enable:
+                self.disclamer_enable = True
+                self.ws_obs.call(requests.SetInputSettings(inputName=self.disclaimer_gdi_text,
+                                                           inputSettings={"text": self.disclaimer_text},
+                                                           overlay=True))
+
+            self.ws_obs.call(requests.SetInputSettings(inputName=self.subtitle_gdi_text,
                                                        inputSettings={"text": text},
                                                        overlay=True))
         else:
-            self.ws_obs.call(requests.SetInputSettings(inputName=self.gdi_text,
+            if self.disclamer_enable:
+                self.disclamer_enable = False
+                self.ws_obs.call(requests.SetInputSettings(inputName=self.disclaimer_gdi_text,
+                                                           inputSettings={"text": ""},
+                                                           overlay=True))
+
+            self.ws_obs.call(requests.SetInputSettings(inputName=self.subtitle_gdi_text,
                                                        inputSettings={"text": ""},
                                                        overlay=True))
 
