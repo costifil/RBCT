@@ -21,6 +21,11 @@ class ProducerText(Thread):
         self.max_lines = int(kwargs.get("BreezeTranslate", {}).get("max_subtitle_lines", 2))
 
         self.stop_process = Event()
+        self.projector_obj = None
+
+    def set_projector_obj(self, projector):
+        '''set the projector object'''
+        self.projector_obj = projector
 
     def stop(self):
         '''stop the thread'''
@@ -52,7 +57,14 @@ class ProducerText(Thread):
                 continue
 
             gen_text = gen_text.lower()
-            self.write_q.add(gen_text)
+            if self.projector_obj:
+                self.projector_obj.send_text(gen_text)
+
+            if isinstance(self.write_q, list):
+                for sq in self.write_q: 
+                    sq.add(gen_text)
+            else:
+                self.write_q.add(gen_text)
             used_text.append(gen_text)
             logging.debug("Text added to the queue: %s", gen_text)
             print(f"- {len(gen_text):>3} - {gen_text}")

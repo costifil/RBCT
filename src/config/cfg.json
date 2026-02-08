@@ -1,6 +1,6 @@
 [
     {
-        "application": "translate_subtitle_OBS",
+        "application": "translate_subtitle_app",
         "BreezeTranslate": {
             "url": "https://bisericabaptistaromanatoronto.breezetranslate.com/client/",
             "language": "en",
@@ -9,10 +9,14 @@
         "OBS": {
             "host": "localhost",
             "port": 4455,
-            "password": "",
+            "password": "vnUq8KmytiCg42q1",
             "subtitle_gdi_text": "Subtitle",
             "disclaimer_gdi_text": "Disclaimer",
             "disclaimer_text": "Translation by AI Tool"
+        },
+        "PROJECTOR": {
+            "display": 2,
+            "max_lines": 50
         },
         "languages": {
             "English": "en",

@@ -9,21 +9,82 @@ import time
 import logging
 from ch_logger.logger_config import setup_logger        # pylint: disable=import-error
 from translate_app.producer_text import ProducerText    # pylint: disable=import-error
-from translate_app.producer import Producer             # pylint: disable=import-error
-from translate_app.consumer import Consumer             # pylint: disable=import-error
+from translate_app.breeze import Breeze                 # pylint: disable=import-error
+from translate_app.obs import Obs                       # pylint: disable=import-error
 from translate_app.string_queue import StringQueue      # pylint: disable=import-error
 from ch_utils import ch_utils as util                   # pylint: disable=import-error
 
 
 class Translate:
     '''Translate dialog class'''
-    def __init__(self, breez_conn, obs_conn, **kwargs):
+    def __init__(self, breez_chk, obs_chk, projector_chk, **kwargs):
+        self.breez_chk = breez_chk
+        self.obs_chk = obs_chk
+        self.projector_chk = projector_chk
+        self.kwargs = kwargs
+
+        self.producer_obj = None # this is Breeze or ProducerText
+        self.obs_obj = None
+        self.projector_obj = None
+
+        self.queues = [StringQueue() for _ in range(2)]
+
+        if self.breez_chk:
+            self.producer_obj = Breeze(self.queues, **kwargs)
+        else:
+            # Breeze was disabled - start producer text
+            self.producer_obj = ProducerText(self.queues, **kwargs)
+
+        if self.obs_chk:
+            self.kwargs['obs_enable'] = self.obs_chk
+            self.obs_obj = Obs(self.queues[0], **self.kwargs)
+
+        #if self.projector_chk:
+        #    self.projector_obj = Projector(self.queues[1], **self.kwargs)
+
+    def start(self, projector_obj=None):
+        '''initiate starting the session'''
+        #if proj_obj:
+        #    self.proj_dialog = proj_obj
+
+        #logging.info("\n\t============= Start new session =============")
+        #logging.info("Breeze is %s!", ("enabled" if self.breeze else "disabled"))
+        #logging.info("OBS is %s!", ("enabled" if self.obs else "disabled"))
+        if self.producer_obj:
+            self.producer_obj.set_projector_obj(projector_obj)
+            #logging.info("Language set to: %s",
+            #             self.kwargs.get("BreezeTranslate", {}).get("language"))
+            self.producer_obj.start()
+
+        if self.obs_obj:
+            #self.consumer.init_projector(self.proj_dialog)
+            self.obs_obj.start(self.strque, **self.kwargs)
+
+    def stop(self):
+        '''initiate stopping the session'''
+        logging.info("Stop initiated by the user!")
+        print("Stop initiated by the user!")
+        if self.producer_obj:
+            self.producer_obj.stop()
+            self.producer_obj = None
+
+        if self.obs_obj:
+            self.obs_obj.stop()
+            self.obs_obj = None
+
+
+class TranslateOld:
+    '''Translate dialog class'''
+    def __init__(self, breez_conn, obs_conn, projector_conn, **kwargs):
         self.breeze = breez_conn
         self.obs = obs_conn
         self.kwargs = kwargs
+        # for 2 consumers I need 2 queues. One for each consumer 
+        # and the producer will produce in both queues
         self.strque = StringQueue()
         self.producer = None
         self.consumer = None
+        self.proj_dialog = None
 
         if self.breeze:
             self.producer = Producer(self.strque, **self.kwargs)
@@ -34,8 +95,11 @@ class Translate:
         self.kwargs['obs_enable'] = self.obs
         self.consumer = Consumer(self.strque, **self.kwargs)
 
-    def start(self):
+    def start(self, proj_obj=None):
         '''initiate starting the session'''
+        if proj_obj:
+            self.proj_dialog = proj_obj
+
         logging.info("\n\t============= Start new session =============")
         logging.info("Breeze is %s!", ("enabled" if self.breeze else "disabled"))
         logging.info("OBS is %s!", ("enabled" if self.obs else "disabled"))
@@ -43,8 +107,11 @@ class Translate:
             logging.info("Language set to: %s",
                          self.kwargs.get("BreezeTranslate", {}).get("language"))
             self.producer.start()
+
         if self.consumer:
+            self.consumer.init_projector(self.proj_dialog)
             self.consumer.start()
+
 
     def stop(self):
         '''initiate stopping the session'''
@@ -58,10 +125,46 @@ class Translate:
             self.consumer.stop()
             self.consumer = None
 
-class TranslateDialog:
+
+class ProjectorDialog(tk.Toplevel):
+    def __init__(self, master):
+        super().__init__(master)
+
+        self.title("Projector")
+        self.geometry("640x400")
+        #self.geometry(f"800x600+{m.x}+{m.y}") where m is the monitor number
+
+        self.text_box = tk.Text(self, fg="white", bg="black", font=("Arial", 40))
+        self.text_box.pack(expand=True, fill="both")
+
+    def on_close(self):
+        '''on close event in dialog'''
+        logging.info("Close Projector Dialog")
+        self.destroy()
+
+    def send_text(self, message):
+        print("ProjectorDialog::send_text: ", message)
+        if message:
+            self.text_box.insert("end", message + "\n")
+            self.text_box.see("end")
+            self.trim_lines(20)
+
+        lines = int(self.text_box.index("end-1c").split(".")[0])
+        print("lines:", lines)
+
+    def trim_lines(self, max_lines):
+        lines = int(self.text_box.index("end-1c").split(".")[0])
+        while lines > max_lines:
+            self.text_box.delete("1.0", "2.0")
+            lines -= 1
+
+class TranslateDialog(tk.Toplevel):
     '''Translate dialog class'''
     def __init__(self, parent):
+        super().__init__(parent)
+        self.root = parent
         self.translate = None
+        self.proj_dialog = None
 
         self.data = util.get_config_info()
         for item in self.data:
@@ -75,15 +178,21 @@ class TranslateDialog:
 
         self.language_list = list(lang_dict.keys())
 
-        self.parent = parent
-        self.parent.title("Subtitle Translate")
-        self.parent.geometry("340x150")
-        self.parent.minsize(width=340, height=150)
-        self.parent.maxsize(width=340, height=150)
-        self.parent.protocol("WM_DELETE_WINDOW", self.on_close)
+        # self.parent = parent
+        # self.parent.title("Subtitle Translate")
+        # self.parent.geometry("340x200")
+        # self.parent.minsize(width=340, height=200)
+        # self.parent.maxsize(width=340, height=200)
+        # self.parent.protocol("WM_DELETE_WINDOW", self.on_close)
 
+        self.title("Subtitle Translate")
+        self.geometry("340x200")
+        self.minsize(width=340, height=200)
+        self.maxsize(width=340, height=200)
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        self.gui_frame = tk.Frame(parent)
+        #self.gui_frame = tk.Frame(parent)
+        self.gui_frame = tk.Frame(self)
         self.gui_frame.pack(expand=True, anchor=tk.NW)
         self.gui_frame.config(width=340)
 
@@ -98,6 +207,15 @@ class TranslateDialog:
         self.check_obs = tk.BooleanVar(value=True)
         self.obs_ck = tk.Checkbutton(self.gui_frame, text="OBS Connection", variable=self.check_obs, command=self.on_obs_check)
         self.obs_ck.grid(column=col, row=row, padx=20, sticky="w")
+
+        col = 1
+        row += 1
+        self.projector_button = tk.Button(self.gui_frame,
+                                          text="Projector Dialog",
+                                          width=15,
+                                          command=self.open_projector_dialog)
+        self.projector_button.grid(column=col, row=row, padx=10, pady=20)
+        self.projector_button.config(state=tk.NORMAL)
 
         col = 0
         row += 1
@@ -129,7 +247,8 @@ class TranslateDialog:
         self.stop_button.grid(column=col, row=row, padx=10, pady=20)#, sticky="w")
         self.stop_button.config(state=tk.DISABLED)
 
-        self.parent.eval("tk::PlaceWindow . center")
+        #self.parent.eval("tk::PlaceWindow . center")
+
 
     def set_language(self):
         '''Override the languge from json with the selection from GUI'''
@@ -147,13 +266,21 @@ class TranslateDialog:
 
         bt['language'] = "en"
 
+    def open_projector_dialog(self):
+        if self.proj_dialog is None or not self.proj_dialog.winfo_exists():
+            self.proj_dialog = ProjectorDialog(self)
+        else:
+            self.proj_dialog.lift()
+
     def start_action(self):
         '''start button was pressed'''
         self.start_button.config(state=tk.DISABLED)
         self.stop_button.config(state=tk.NORMAL)
         self.set_language()
-        self.translate = Translate(self.check_breeze.get(), self.check_obs.get(), **self.data)
-        self.translate.start()
+        self.translate = Translate(self.check_breeze.get(),
+                                   self.check_obs.get(),
+                                   **self.data)
+        self.translate.start(self.proj_dialog)
 
     def stop_action(self):
         '''stop button was pressed'''
@@ -174,7 +301,9 @@ class TranslateDialog:
         if self.translate:
             self.translate.stop()
             time.sleep(0.5)
-        self.parent.destroy()
+        #self.parent.destroy()
+        self.destroy()
+        self.root.destroy()
 
 
 def main():
@@ -184,6 +313,8 @@ def main():
                  console_hnd=logging.ERROR) # logging initialized ONCE
 
     root = tk.Tk()
+    root.withdraw()
+
     if os.path.exists("CC.ico"):
         root.iconbitmap("CC.ico")
     TranslateDialog(root)

@@ -42,6 +42,10 @@ class Consumer(Thread):
         self.stop_process = Event()
         self.ws_obs = None
         self.enable_text = kwargs.get("obs_enable")
+        self.projector = None
+
+    def init_projector(self, projector):
+        self.projector = projector
 
     def connect_obs(self):
         '''connect to OBS'''
@@ -109,6 +113,8 @@ class Consumer(Thread):
                 move_on = False
                 text = self.read_q.pop()
                 if text:
+                    if self.projector:
+                        self.projector.send_text(text)
                     no_text = 0
                     t_on_s = time_on_screen(len(text))
                     if t_on_s == LenText.LESS_6.value[1]:
