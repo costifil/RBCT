@@ -42,6 +42,7 @@ class Consumer(Thread):
         self.stop_process = Event()
         self.ws_obs = None
         self.enable_text = kwargs.get("obs_enable")
+        self.disc_txt = self.disclaimer_text
 
     def connect_obs(self):
         '''connect to OBS'''
@@ -62,12 +63,15 @@ class Consumer(Thread):
 
     def enable_subtitle(self, enable: bool=True):
         '''enable the flag to send text on OBS screen'''
+        self.disc_txt = self.disclaimer_text
         self.enable_text = enable
         return self.enable_text
 
     def stop(self):
         '''stop the thread'''
         if self.ws_obs:
+            self.disc_txt = ""
+            self.disclamer_enable = False
             # sending empty string to GDI text in OBS
             self.send_text("")
 
@@ -81,7 +85,7 @@ class Consumer(Thread):
             if not self.disclamer_enable:
                 self.disclamer_enable = True
                 self.ws_obs.call(requests.SetInputSettings(inputName=self.disclaimer_gdi_text,
-                                                           inputSettings={"text": self.disclaimer_text},
+                                                           inputSettings={"text": self.disc_txt},
                                                            overlay=True))
 
             self.ws_obs.call(requests.SetInputSettings(inputName=self.subtitle_gdi_text,
@@ -100,6 +104,7 @@ class Consumer(Thread):
 
     def run(self):
         logging.info("Consumer started ...")
+        self.disc_txt = self.disclaimer_text
         self.connect_obs()
 
         t_on_s = 1
