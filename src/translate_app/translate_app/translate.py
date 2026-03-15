@@ -17,7 +17,7 @@ from ch_utils import ch_utils as util                   # pylint: disable=import
 
 class Translate:
     '''Translate dialog class'''
-    def __init__(self, breez_chk, obs_chk, projector_chk, **kwargs):
+    def __init__(self, breez_chk, obs_chk, projector_chk=None, **kwargs):
         self.breez_chk = breez_chk
         self.obs_chk = obs_chk
         self.projector_chk = projector_chk
@@ -168,7 +168,7 @@ class TranslateDialog(tk.Toplevel):
 
         self.data = util.get_config_info()
         for item in self.data:
-            if item.get("application") == "translate_subtitle_OBS":
+            if item.get("application") == "translate_subtitle_app":
                 self.data = item
                 break
 

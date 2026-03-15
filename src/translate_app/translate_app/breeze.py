@@ -80,9 +80,15 @@ class Breeze(Thread):
                             logging.debug("Text already in the used list: %s", text)
                             continue
 
-                        self.write_q.add(text)
+                        if self.projector_obj:
+                            self.projector_obj.send_text(text)
+
+                        #self.write_q.add(text)
+                        self.write_q.append(text)
                         used_text.append(text)
                         logging.debug("Text added to the queue: %s", text)
+                        #logging.debug("\n\n*** used text len = %s", len(used_text))
+                        #logging.debug("*** write queue len = %s\n\n", len(self.write_q))
 
                 except TimeoutException:
                     logging.warning("Timed out")
