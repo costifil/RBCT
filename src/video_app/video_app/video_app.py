@@ -24,16 +24,26 @@ class VideoDialog:
         self.gui_frame.config(width=400)
 
         col = 0
+        row = 0
+        tk.Label(self.gui_frame,
+                 text="Applications List",
+                 justify=tk.LEFT).grid(column=col,
+                                       row=row,
+                                       padx=10,
+                                       pady=20)
+
+        row += 1
         tk.Label(self.gui_frame,
                  text="Start on Display",
                  justify=tk.LEFT).grid(column=col,
-                                       row=0,
+                                       row=row,
                                        padx=10,
                                        pady=20)
+        row += 1
         tk.Label(self.gui_frame,
                  text="Stop on Display",
                  justify=tk.LEFT).grid(column=col,
-                                       row=1,
+                                       row=row,
                                        padx=10,
                                        pady=20)
 
@@ -46,48 +56,58 @@ class VideoDialog:
                 data = item
                 break
 
+        self.app_list = data.get("app_list", [])
         self.displays = data.get("displays")
-        start_display = data.get("start_disaply")
+        start_display = data.get("start_display")
         stop_display = data.get("stop_display")
 
         col += 1
+        row = 0
+        self.apps_start = ttk.Combobox(self.gui_frame, values=self.app_list)
+        self.apps_start.current(0)
+        self.apps_start.grid(column=col, row=row, padx=10)
+
+        row += 1
         self.combo_start = ttk.Combobox(self.gui_frame, values=self.displays)
         #self.combo_start.current(0)
         self.combo_start.set(start_display)
-        self.combo_start.grid(column=col, row=0, padx=10)
+        self.combo_start.grid(column=col, row=row, padx=10)
 
+        row += 1
         self.combo_stop = ttk.Combobox(self.gui_frame, values=self.displays)
         #self.combo_stop.current(1)
         self.combo_stop.set(stop_display)
-        self.combo_stop.grid(column=col, row=1, padx=10)
+        self.combo_stop.grid(column=col, row=row, padx=10)
 
         col += 1
+        row = 1
         self.start_button = tk.Button(self.gui_frame, text="Start", command=self.start_action)
-        self.start_button.grid(column=col, row=0, padx=10)
+        self.start_button.grid(column=col, row=row, padx=10)
 
+        row += 1
         self.stop_button = tk.Button(self.gui_frame, text="Stop", command=self.stop_action)
-        self.stop_button.grid(column=col, row=1, padx=10)
-        self.video_prj = VideoProjection(data.get("app_list", []))
+        self.stop_button.grid(column=col, row=row, padx=10)
+        self.video_prj = VideoProjection(self.app_list)
 
         self.parent.eval("tk::PlaceWindow . center")
 
     def start_action(self):
         '''start button was pressed'''
         print("Start video!")
-        self.start_button.config(state=tk.DISABLED)
-        self.stop_button.config(state=tk.NORMAL)
+        #self.start_button.config(state=tk.DISABLED)
+        #self.stop_button.config(state=tk.NORMAL)
         monitor = self.combo_start.current()
-        if not self.video_prj.screen_optimizer(self.displays[monitor], fullscreen=True):
+        if not self.video_prj.screen_optimizer(self.displays[monitor], self.apps_start.current(), fullscreen=True):
             self.start_button.config(state=tk.NORMAL)
             self.stop_button.config(state=tk.NORMAL)
 
     def stop_action(self):
         '''stop button was pressed'''
         print("Stop video!")
-        self.start_button.config(state=tk.NORMAL)
-        self.stop_button.config(state=tk.DISABLED)
+        #self.start_button.config(state=tk.NORMAL)
+        #self.stop_button.config(state=tk.DISABLED)
         monitor = self.combo_stop.current()
-        if not self.video_prj.screen_optimizer(self.displays[monitor]):
+        if not self.video_prj.screen_optimizer(self.displays[monitor], self.apps_start.current()):
             self.start_button.config(state=tk.NORMAL)
             self.stop_button.config(state=tk.NORMAL)
 

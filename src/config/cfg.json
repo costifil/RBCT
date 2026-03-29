@@ -27,9 +27,10 @@
             "DISPLAY2",
             "DISPLAY3"
         ],
-        "start_disaply": "DISPLAY2",
+        "start_display": "DISPLAY2",
         "stop_display": "DISPLAY1",
         "app_list": [
+            "All Applications",
             "VLC media player",
             "Windows Media Player",
             "Media Player",

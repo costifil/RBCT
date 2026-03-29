@@ -13,14 +13,17 @@ class VideoProjection:
         self.__monitor = None #get_monitor_info(display)
         self.applications = app_list
 
-    def screen_optimizer(self, display, fullscreen=False):
+    def screen_optimizer(self, display, app_idx=0, fullscreen=False):
         '''optimize to run window on specified monitor'''
-        print("screen_optimizer: display=", display, "fullscreen =", fullscreen)
+        #print("screen_optimizer: display=", display, "app_idx =", app_idx, "fullscreen =", fullscreen)
         self.__monitor = get_monitor_info(display)
 
         win_list = []
-        for item in self.applications:
-            win_list.extend(get_win_by_title(item))
+        if app_idx:
+            win_list.extend(get_win_by_title(self.applications[app_idx]))
+        else:
+            for item in self.applications:
+                win_list.extend(get_win_by_title(item))
 
         if win_list:
         #    reshape_window(fullscreen, self.__monitor, win_list[0])
